@@ -1,0 +1,4 @@
+{
+    "command": "PORT=<port> HOST=<host> BROWSER=none npm start",
+    "working_directory": "/home/kavia/workspace/code-generation/hireiq-114714-e2e61356/hireiq_frontend_workspace/hireiq_frontend"
+}
