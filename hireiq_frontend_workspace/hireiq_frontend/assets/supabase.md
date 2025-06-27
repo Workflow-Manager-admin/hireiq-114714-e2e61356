@@ -9,63 +9,56 @@ Role-based authentication (Admin, Recruiter, Candidate) will be managed through 
 
 ## 1. Supabase Project Setup
 
-If you are a maintainer:
+- Supabase Project URL: `https://rquvaaymanduddbwktxk.supabase.co`
+- Anon/Public API Key is now configured via environment variables.
 
-1. [Create a Supabase Project](https://app.supabase.com)
-2. Note your **Project URL** (e.g. `https://<your-project-id>.supabase.co`)
-3. Go to **Project Settings > API** in the Supabase Dashboard.
-4. Copy the **anon/public API Key**
+> **Do NOT commit API secrets into source control. All secrets must be managed via environment variables, NOT in committed files.**
 
 ---
 
 ## 2. Required Environment Variables
 
-Add the following variables to your frontend environment (`.env.local` file or as system vars):
+These variables are required in your React frontend (prefer `.env.local`):
 
 ```
-REACT_APP_SUPABASE_URL=your_supabase_project_url
-REACT_APP_SUPABASE_ANON_KEY=your_supabase_anon_key
+REACT_APP_SUPABASE_URL=https://rquvaaymanduddbwktxk.supabase.co
+REACT_APP_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJxdXZhYXltYW5kdWRkYndrdHhrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA4MTkwOTcsImV4cCI6MjA2NjM5NTA5N30.iT_cuWebAjeMangmiYSbyutvYab4TlEBZU19QZhR0ss
 ```
 
-*Never commit secrets to source control.*
+- Place these in `hireiq_frontend/.env.local` and _never_ add that file to version control.
 
 ---
 
 ## 3. Integration Instructions
 
-After creating the Supabase project and adding env vars, follow these steps:
+### 1. Install Supabase JS Client
+```sh
+npm install @supabase/supabase-js
+```
 
-1. **Install Supabase JS Client:**
-   ```
-   npm install @supabase/supabase-js
-   ```
+### 2. Initialize Supabase Client in Code
+Where you handle authentication (e.g., `AuthProvider.js`):
 
-2. **Initialize the Supabase client:**
-   Import and set up in your auth provider file:
-   ```js
-   import { createClient } from '@supabase/supabase-js';
+```js
+import { createClient } from '@supabase/supabase-js';
 
-   const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
-   const supabaseAnonKey = process.env.REACT_APP_SUPABASE_ANON_KEY;
-   export const supabase = createClient(supabaseUrl, supabaseAnonKey);
-   ```
+const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
+const supabaseAnonKey = process.env.REACT_APP_SUPABASE_ANON_KEY;
+export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+```
 
-3. **Replace Local Auth with Supabase Auth:**
-   Update your logic so user signup, login, logout, and role assignment use Supabase Auth APIs.
-
-4. **Role Management:**
-   - Supabase Auth supports custom user metadata (e.g., roles). 
-   - You can add a table called `profiles` to store user roles (`Admin`, `Recruiter`, `Candidate`).
-   - Use Row Level Security (RLS) for fine-grained authorization.
+### 3. Replace Demo Auth With Supabase
+- Use Supabase methods for sign up, sign in, sign out
+- Assign user roles using metadata or a roles table (e.g., `profiles` with `role` field)
+- Use Row Level Security for authorization where needed
 
 ---
 
 ## 4. Documentation Update
 
-Update this file with:
-- Project URL and API Key (do **not** commit secrets)
-- Any special configuration (Social login, RLS policies, etc.)
-- Database schema (if expanded beyond authentication)
+- Supabase Project URL: `https://rquvaaymanduddbwktxk.supabase.co`
+- Anon key is injected via env.
+- Update this doc if you add social login, enable RLS, or change schema (e.g., user roles management).
 
 ---
 
@@ -73,7 +66,8 @@ Update this file with:
 
 - [Supabase Auth Docs](https://supabase.com/docs/guides/auth)
 - [Managing User Roles - Example](https://supabase.com/docs/guides/auth/managing-user-data)
+- [Supabase JS Client](https://supabase.com/docs/reference/javascript/introduction)
 
 ---
 
-_Last updated: [INITIAL-SCFAFFOLD - Awaiting project credentials and implementation steps]_
+_Last updated: [2024-06 Supabase credentials applied, environment variables refreshed]_
