@@ -12,10 +12,11 @@
   content: "";
   position: fixed;
   inset: 0;
-  /* Extra layer to boost white-card contrast on busy bg images */
+  /* Stronger white to boost login contrast on new bg */
   background: linear-gradient(
-    110deg,
-    #ffffffb9 55%,       /* More white left */
+    104deg,
+    #fffdfbcc 54%,
+    #e4e8ef55 78%,
     #f5a62338 100%
   );
   z-index: 0;

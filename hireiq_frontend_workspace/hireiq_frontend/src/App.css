@@ -35,10 +35,10 @@
   z-index: 0;
   pointer-events: none;
   background: 
-    linear-gradient(rgba(34, 37, 47, 0.60), rgba(34,37,47,0.55)),
-    url('https://images.unsplash.com/photo-1454023492550-5696f8ff10e1?auto=format&fit=crop&w=1350&q=80') center center/cover no-repeat fixed;
-  /* Royalty-free Unsplash workplace tech image */
-  filter: blur(0px) brightness(0.93);
+    linear-gradient(rgba(36, 46, 67, 0.60), rgba(36,46,67,0.55)),
+    url('https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1350&q=80') center center/cover no-repeat fixed;
+  /* Royalty-free Unsplash job/career/office theme image */
+  filter: blur(0px) brightness(0.96);
   transition: filter 0.3s;
 }
 
