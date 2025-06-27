@@ -1,14 +1,17 @@
+/* Enhanced responsive style for dashboard tables and admin actions */
 .dashboard-table {
   width: 100%;
   border-collapse: separate;
   background: #fafbfc;
-  border-radius: 8px;
+  border-radius: 12px;
   overflow: hidden;
   font-size: 1rem;
+  box-shadow: 0 2px 12px #1a223255;
+  margin-bottom: 18px;
 }
 
 .dashboard-table th, .dashboard-table td {
-  padding: 9px 7px;
+  padding: 11px 10px;
   border-bottom: 1px solid #ededed;
   text-align: left;
 }
@@ -17,26 +20,70 @@
   background: #efefef;
   color: #274671;
   font-weight: 900;
+  letter-spacing: 0.4px;
+  font-size: 1.04rem;
+  border-top: 1px solid #e5eaf4;
 }
 .dashboard-table tr:last-child td {
   border-bottom: none;
 }
 .dashboard-table tbody tr:hover {
-  background: #f1faf7;
+  background: #e5f8f3;
+  transition: background 0.12s;
 }
 
 .action-btn {
   background: #0070f3;
   color: #fff;
   border: 0;
-  border-radius: 6px;
-  padding: 5px 14px;
+  border-radius: 7px;
+  padding: 5px 16px;
   font-weight: 700;
-  font-size: 0.97rem;
+  font-size: 0.98rem;
   cursor: pointer;
   margin-right: 7px;
-  transition: background 0.15s;
+  transition: background 0.18s, box-shadow 0.15s;
+  box-shadow: 0 2px 7px #0070f336;
 }
-.action-btn:active, .action-btn:hover {
-  opacity: 0.8;
+.action-btn:active,
+.action-btn:hover {
+  opacity: 0.92;
+  background: #145b39;
+}
+.status-pill {
+  padding: 5px 14px;
+  border-radius: 16px;
+  display: inline-block;
+  font-weight: 700;
+  font-size: 0.99rem;
+  letter-spacing: 0.04em;
+}
+.status-pill.active {
+  background: #e3fcec;
+  color: #12b7a6;
+  border: 1px solid #b7f6ea;
+}
+.status-pill.inactive {
+  background: #ffe4df;
+  color: #db2222;
+  border: 1px solid #ffbcb3;
+}
+@media (max-width: 800px) {
+  .dashboard-table th, .dashboard-table td {
+    padding: 7px 5px;
+    font-size: 0.94rem;
+  }
+}
+@media (max-width: 480px) {
+  .dashboard-table {
+    font-size: 0.93rem;
+    border-radius: 7px;
+  }
+  .dashboard-table th, .dashboard-table td {
+    padding: 5px 1px;
+  }
+  .action-btn {
+    font-size: 0.88rem;
+    padding: 4px 8px;
+  }
 }

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../../auth/supabaseClient';
+import './AdminDashboard.css';
 
 // Reusable feedback toast component
 function Toast({ message, type = "success", onClose }) {
@@ -19,6 +20,8 @@ function Toast({ message, type = "success", onClose }) {
         fontWeight: 600,
         boxShadow: "0 4px 18px #20163323"
       }}
+      role="status"
+      aria-live="polite"
     >
       {message}
       <button
@@ -39,7 +42,7 @@ function Toast({ message, type = "success", onClose }) {
 }
 
 // Modal for editing user roles/status
-function UserEditModal({ user, onClose, onChangeRole, onChangeStatus }) {
+function UserEditModal({ user, onClose, onChangeRole }) {
   const [editVals, setEditVals] = useState({ role: user.role, active: user.active !== false });
   const [pending, setPending] = useState(false);
 
@@ -122,6 +125,9 @@ function AdminDashboard({ section }) {
   // For user editing modal/dialog
   const [editUser, setEditUser] = useState(null);
 
+  // For initial load state to avoid "No users found" flicker
+  const [initialLoad, setInitialLoad] = useState({ users: false, jobs: false });
+
   // Tabs: section=null: summary, users: "users", jobs: "jobs"
   useEffect(() => {
     if (!section || section === "") return;
@@ -136,6 +142,7 @@ function AdminDashboard({ section }) {
     const { data, error } = await supabase.from('profiles').select('*').order('created_at', { ascending: false });
     if (!error && data) setUsers(data);
     else setUserAction(s => ({ ...s, error: 'Failed to fetch users.' }));
+    setInitialLoad(l => ({ ...l, users: true }));
     setFetching(false);
   }
 
@@ -145,6 +152,7 @@ function AdminDashboard({ section }) {
     const { data, error } = await supabase.from('jobs').select('*').order('created_at', { ascending: false });
     if (!error && data) setJobs(data);
     else setJobAction(s => ({ ...s, error: 'Failed to fetch jobs.' }));
+    setInitialLoad(l => ({ ...l, jobs: true }));
     setFetching(false);
   }
 
@@ -152,18 +160,22 @@ function AdminDashboard({ section }) {
   // Update user role and/or status from modal
   async function handleUserRoleChange(user, newRole, newActive) {
     setUserAction({ pending: true, error: '', success: '' });
-    const updates = { role: newRole };
-    if (newActive !== undefined) updates.active = newActive;
-    const { error } = await supabase.from('profiles').update(updates).eq('id', user.id);
-    if (!error) {
-      setUserAction({ pending: false, error: '', success: 'User updated!' });
-      setToast({ message: 'User updated!', type: 'success' });
-      setEditUser(null);
-      fetchUsers();
-    }
-    else {
-      setUserAction({ pending: false, error: error.message || 'Update failed.', success: '' });
-      setToast({ message: error.message || 'User update failed.', type: 'error' });
+    try {
+      const updates = { role: newRole };
+      if (newActive !== undefined) updates.active = newActive;
+      const { error } = await supabase.from('profiles').update(updates).eq('id', user.id);
+      if (!error) {
+        setUserAction({ pending: false, error: '', success: 'User updated!' });
+        setToast({ message: 'User updated!', type: 'success' });
+        setEditUser(null);
+        fetchUsers();
+      } else {
+        setUserAction({ pending: false, error: error.message || 'Update failed.', success: '' });
+        setToast({ message: error.message || 'User update failed.', type: 'error' });
+      }
+    } catch (e) {
+      setUserAction({ pending: false, error: 'Unexpected error updating user.', success: '' });
+      setToast({ message: 'Unexpected error updating user.', type: 'error' });
     }
   }
 
@@ -179,42 +191,65 @@ function AdminDashboard({ section }) {
   async function handleJobDelete(jobId) {
     if (!window.confirm('Are you sure you want to permanently delete this job posting?')) return;
     setJobAction({ pending: true, error: '', success: '' });
-    const { error } = await supabase.from('jobs').delete().eq('id', jobId);
-    if (!error) {
-      setJobAction({ pending: false, error: '', success: 'Job deleted.' });
-      setToast({ message: 'Job deleted.', type: 'success' });
-      fetchJobs();
-    } else {
-      setJobAction({ pending: false, error: error.message || 'Delete failed', success: '' });
-      setToast({ message: error.message || 'Job delete failed.', type: 'error' });
+    try {
+      const { error } = await supabase.from('jobs').delete().eq('id', jobId);
+      if (!error) {
+        setJobAction({ pending: false, error: '', success: 'Job deleted.' });
+        setToast({ message: 'Job deleted.', type: 'success' });
+        fetchJobs();
+      } else {
+        setJobAction({ pending: false, error: error.message || 'Delete failed', success: '' });
+        setToast({ message: error.message || 'Job delete failed.', type: 'error' });
+      }
+    } catch (e) {
+      setJobAction({ pending: false, error: 'Unexpected error deleting job.', success: '' });
+      setToast({ message: 'Unexpected error deleting job.', type: 'error' });
     }
   }
 
   async function handleJobDeactivate(job) {
     setJobAction({ pending: true, error: '', success: '' });
-    const { error } = await supabase.from('jobs').update({ active: false }).eq('id', job.id);
-    if (!error) {
-      setJobAction({ pending: false, error: '', success: 'Job deactivated.' });
-      setToast({ message: 'Job deactivated.', type: 'success' });
-      fetchJobs();
-    } else {
-      setJobAction({ pending: false, error: error.message || 'Update failed', success: '' });
-      setToast({ message: error.message || 'Job deactivate failed.', type: 'error' });
+    try {
+      const { error } = await supabase.from('jobs').update({ active: false }).eq('id', job.id);
+      if (!error) {
+        setJobAction({ pending: false, error: '', success: 'Job deactivated.' });
+        setToast({ message: 'Job deactivated.', type: 'success' });
+        fetchJobs();
+      } else {
+        setJobAction({ pending: false, error: error.message || 'Update failed', success: '' });
+        setToast({ message: error.message || 'Job deactivate failed.', type: 'error' });
+      }
+    } catch (e) {
+      setJobAction({ pending: false, error: 'Unexpected error updating job.', success: '' });
+      setToast({ message: 'Unexpected error updating job.', type: 'error' });
     }
   }
   async function handleJobReactivate(job) {
     setJobAction({ pending: true, error: '', success: '' });
-    const { error } = await supabase.from('jobs').update({ active: true }).eq('id', job.id);
-    if (!error) {
-      setJobAction({ pending: false, error: '', success: 'Job reactivated.' });
-      setToast({ message: 'Job reactivated.', type: 'success' });
-      fetchJobs();
-    } else {
-      setJobAction({ pending: false, error: error.message || 'Update failed', success: '' });
-      setToast({ message: error.message || 'Job reactivate failed.', type: 'error' });
+    try {
+      const { error } = await supabase.from('jobs').update({ active: true }).eq('id', job.id);
+      if (!error) {
+        setJobAction({ pending: false, error: '', success: 'Job reactivated.' });
+        setToast({ message: 'Job reactivated.', type: 'success' });
+        fetchJobs();
+      } else {
+        setJobAction({ pending: false, error: error.message || 'Update failed', success: '' });
+        setToast({ message: error.message || 'Job reactivate failed.', type: 'error' });
+      }
+    } catch (e) {
+      setJobAction({ pending: false, error: 'Unexpected error updating job.', success: '' });
+      setToast({ message: 'Unexpected error updating job.', type: 'error' });
     }
   }
 
+  // Helpers for UI status pills
+  function statusPill(val, activeLabel, inactiveLabel) {
+    if (val === false)
+      return <span className="status-pill inactive">{inactiveLabel}</span>;
+    return <span className="status-pill active">{activeLabel}</span>;
+  }
+
+  // Main return - all admin sections
   return (
     <div style={{ maxWidth: 1000, margin: '26px auto 0', padding: '0 10px' }}>
       {/* Feedback Toast */}
@@ -244,15 +279,16 @@ function AdminDashboard({ section }) {
       {section === "users" && (
         <div style={{
           background: '#fff', borderRadius: 16, boxShadow: '0 2px 18px #1c314333',
-          padding: '32px 35px 28px 35px', border: '1px solid #e8e8ef', minHeight: 480
+          padding: '32px 20px 28px 20px', border: '1px solid #e8e8ef', minHeight: 480
         }}>
           <h2 style={{ color: '#284DD9', fontWeight: 900, marginBottom: 25 }}>User Management</h2>
           {userAction.success && <div style={{ background: "#e3fcec", color: "#145b39", borderRadius: 6, padding: '7px 10px', fontWeight: 600, marginBottom: 10 }}>{userAction.success}</div>}
           {userAction.error && <div style={{ background: "#ffe4df", color: "#db2222", borderRadius: 6, padding: '7px 10px', fontWeight: 600, marginBottom: 10 }}>{userAction.error}</div>}
-          <table style={{ width: '100%', background: '#fafbfc', borderCollapse: 'separate', border: 0, borderRadius: 8, overflow: 'hidden' }}>
+          {fetching && <div style={{color:"#274671",marginBottom:8}}>Loading users...</div>}
+          <table className="dashboard-table">
             <thead>
-              <tr style={{ background: '#efefef', color: '#274671', fontWeight: 700 }}>
-                <th style={{ padding: '10px 5px' }}>Name</th>
+              <tr>
+                <th>Name</th>
                 <th>Email</th>
                 <th>Role</th>
                 <th>Status</th>
@@ -260,30 +296,31 @@ function AdminDashboard({ section }) {
               </tr>
             </thead>
             <tbody>
-              {users.length === 0 && (
+              {!fetching && users.length === 0 && initialLoad.users && (
                 <tr>
                   <td colSpan={5} style={{ color: "#888", textAlign: 'center', padding: 22 }}>No users found.</td>
                 </tr>
               )}
               {users.map(user => (
-                <tr key={user.id} style={{ borderBottom: '1px solid #eaeaea' }}>
-                  <td style={{ padding: 9 }}>{user.full_name || user.username || 'N/A'}</td>
+                <tr key={user.id}>
+                  <td>{user.full_name || user.username || 'N/A'}</td>
                   <td>{user.email}</td>
                   <td>{user.role}</td>
                   <td>
-                    {user.active === false ? <span style={{ color: '#db1122', fontWeight: 600 }}>Inactive</span>
-                      : <span style={{ color: '#12b7a6', fontWeight: 600 }}>Active</span>}
+                    {statusPill(user.active, "Active", "Inactive")}
                   </td>
                   <td>
                     <button
+                      className="action-btn"
                       onClick={() => setEditUser(user)}
-                      style={{ background: "#0070f3", color: "white", marginRight: 9, border: 0, borderRadius: 6, padding: "4px 10px", fontWeight: 600, fontSize: '0.97rem', cursor: 'pointer' }}
+                      style={{ marginRight: 8 }}
                     >Edit</button>
                     {user.active === false
-                      ? <button onClick={() => handleUserReactivate(user)} disabled={userAction.pending}
-                          style={{ background: "#12b7a6", color: "white", border: 0, borderRadius: 6, padding: "4px 10px", fontWeight: 600, fontSize: '0.97rem', cursor: 'pointer' }}>Reactivate</button>
-                      : <button onClick={() => handleUserDeactivate(user)} disabled={userAction.pending}
-                          style={{ background: "#db1122", color: "white", border: 0, borderRadius: 6, padding: "4px 10px", fontWeight: 600, fontSize: '0.97rem', cursor: 'pointer' }}>Deactivate</button>
+                      ? <button className="action-btn"
+                          style={{background:"#12b7a6"}} onClick={() => handleUserReactivate(user)} disabled={userAction.pending}>Reactivate</button>
+                      : <button className="action-btn"
+                          style={{background:"#db2222"}}
+                          onClick={() => handleUserDeactivate(user)} disabled={userAction.pending}>Deactivate</button>
                     }
                   </td>
                 </tr>
@@ -295,7 +332,6 @@ function AdminDashboard({ section }) {
               user={editUser}
               onClose={() => setEditUser(null)}
               onChangeRole={handleUserRoleChange}
-              onChangeStatus={(user, status) => handleUserRoleChange(user, user.role, status)}
             />
           )}
           <button
@@ -311,15 +347,16 @@ function AdminDashboard({ section }) {
       {section === "jobs" && (
         <div style={{
           background: '#fff', borderRadius: 16, boxShadow: '0 2px 18px #1c314333',
-          padding: '32px 35px 28px 35px', border: '1px solid #e8e8ef', minHeight: 480
+          padding: '32px 20px 28px 20px', border: '1px solid #e8e8ef', minHeight: 480
         }}>
           <h2 style={{ color: '#284DD9', fontWeight: 900, marginBottom: 24 }}>Job Post Moderation</h2>
           {jobAction.success && <div style={{ background: "#e3fcec", color: "#145b39", borderRadius: 6, padding: '7px 10px', fontWeight: 600, marginBottom: 10 }}>{jobAction.success}</div>}
           {jobAction.error && <div style={{ background: "#ffe4df", color: "#db2222", borderRadius: 6, padding: '7px 10px', fontWeight: 600, marginBottom: 10 }}>{jobAction.error}</div>}
-          <table style={{ width: '100%', background: '#fafbfc', borderCollapse: 'separate', border: 0, borderRadius: 8, overflow: 'hidden' }}>
+          {fetching && <div style={{color:"#274671",marginBottom:8}}>Loading jobs...</div>}
+          <table className="dashboard-table">
             <thead>
-              <tr style={{ background: '#efefef', color: '#274671', fontWeight: 700 }}>
-                <th style={{ padding: '10px 5px' }}>Title</th>
+              <tr>
+                <th>Title</th>
                 <th>Location</th>
                 <th>Salary</th>
                 <th>Status</th>
@@ -327,32 +364,34 @@ function AdminDashboard({ section }) {
               </tr>
             </thead>
             <tbody>
-              {jobs.length === 0 && (
+              {!fetching && jobs.length === 0 && initialLoad.jobs && (
                 <tr>
                   <td colSpan={5} style={{ color: "#888", textAlign: 'center', padding: 22 }}>No jobs found.</td>
                 </tr>
               )}
               {jobs.map(job => (
-                <tr key={job.id} style={{ borderBottom: '1px solid #eaeaea' }}>
-                  <td style={{ padding: 9 }}>{job.title}</td>
+                <tr key={job.id}>
+                  <td>{job.title}</td>
                   <td>{job.location}</td>
                   <td>{job.salary}</td>
                   <td>
-                    {job.active === false
-                      ? <span style={{ color: '#db1122', fontWeight: 600 }}>Inactive</span>
-                      : <span style={{ color: '#12b7a6', fontWeight: 600 }}>Active</span>}
+                    {statusPill(job.active, "Active", "Inactive")}
                   </td>
                   <td>
                     {job.active === false
-                      ? <button onClick={() => handleJobReactivate(job)} disabled={jobAction.pending}
-                          style={{ background: "#12b7a6", color: "white", border: 0, borderRadius: 6, padding: "4px 10px", fontWeight: 600, fontSize: '0.97rem', cursor: 'pointer' }}>Reactivate</button>
-                      : <button onClick={() => handleJobDeactivate(job)} disabled={jobAction.pending}
-                          style={{ background: "#db1122", color: "white", border: 0, borderRadius: 6, padding: "4px 10px", fontWeight: 600, fontSize: '0.97rem', cursor: 'pointer' }}>Deactivate</button>
+                      ? <button className="action-btn"
+                          style={{background:"#12b7a6"}}
+                          onClick={() => handleJobReactivate(job)} disabled={jobAction.pending}>Reactivate</button>
+                      : <button className="action-btn"
+                          style={{background:"#db2222"}}
+                          onClick={() => handleJobDeactivate(job)} disabled={jobAction.pending}>Deactivate</button>
                     }
                     <button
+                      className="action-btn"
+                      style={{background:"#e74c3c", marginLeft: 8}}
                       onClick={() => handleJobDelete(job.id)}
                       disabled={jobAction.pending}
-                      style={{ background: "#e74c3c", color: "white", border: 0, borderRadius: 6, padding: "4px 10px", fontWeight: 600, fontSize: '0.97rem', cursor: 'pointer', marginLeft: 8 }}>
+                    >
                       Delete
                     </button>
                   </td>
