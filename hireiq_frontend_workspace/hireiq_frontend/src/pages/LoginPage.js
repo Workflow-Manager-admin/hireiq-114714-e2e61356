@@ -56,12 +56,29 @@ function LoginPage() {
 
     if (result.success) {
       setSuccess("Login successful! Redirecting...");
+
+      // Redirect after state sync, not using a timeout
+      // Wait for React render to complete (user context/state is updated after login)
       setTimeout(() => {
-        if (result.role === "Admin") navigate("/admin");
-        else if (result.role === "Recruiter") navigate("/recruiter");
-        else if (result.role === "Candidate") navigate("/candidate");
-        else navigate("/profile");
-      }, 800);
+        // Use role from user context if available, as it will be up-to-date
+        // (login returns a role, but double-check with user context for robustness)
+        // Defensive: Fallback to result.role if user might not yet be updated.
+        const user = JSON.parse(localStorage.getItem('hireiq_user'));
+        const goTo = (role) => {
+          if (role === "Admin") navigate("/admin", { replace: true });
+          else if (role === "Recruiter") navigate("/recruiter", { replace: true });
+          else if (role === "Candidate") navigate("/candidate", { replace: true });
+          else navigate("/profile", { replace: true });
+        };
+
+        if (user && user.role) {
+          goTo(user.role);
+        } else if (result.role) {
+          goTo(result.role);
+        } else {
+          navigate("/profile", { replace: true });
+        }
+      }, 150); // Short delay to ensure state/store updates (React async state)
     } else {
       setError(result.error || "Invalid credentials, please try again.");
     }
