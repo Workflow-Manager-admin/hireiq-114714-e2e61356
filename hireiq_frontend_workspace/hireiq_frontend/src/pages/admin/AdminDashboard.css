@@ -1,0 +1,42 @@
+.dashboard-table {
+  width: 100%;
+  border-collapse: separate;
+  background: #fafbfc;
+  border-radius: 8px;
+  overflow: hidden;
+  font-size: 1rem;
+}
+
+.dashboard-table th, .dashboard-table td {
+  padding: 9px 7px;
+  border-bottom: 1px solid #ededed;
+  text-align: left;
+}
+
+.dashboard-table th {
+  background: #efefef;
+  color: #274671;
+  font-weight: 900;
+}
+.dashboard-table tr:last-child td {
+  border-bottom: none;
+}
+.dashboard-table tbody tr:hover {
+  background: #f1faf7;
+}
+
+.action-btn {
+  background: #0070f3;
+  color: #fff;
+  border: 0;
+  border-radius: 6px;
+  padding: 5px 14px;
+  font-weight: 700;
+  font-size: 0.97rem;
+  cursor: pointer;
+  margin-right: 7px;
+  transition: background 0.15s;
+}
+.action-btn:active, .action-btn:hover {
+  opacity: 0.8;
+}
