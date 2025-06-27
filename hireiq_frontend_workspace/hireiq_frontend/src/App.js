@@ -18,19 +18,22 @@ import LoginPage from './pages/LoginPage';
 import ProfilePage from './pages/ProfilePage';
 import NotFoundPage from './pages/NotFoundPage';
 import RegisterPage from './pages/RegisterPage';
+import { Outlet } from 'react-router-dom';
 
 import './App.css';
 
 /**
- * Layout wrapper with sidebar and header
+ * Layout wrapper with sidebar and header (now expects an <Outlet /> for nested routes)
  */
-function DashboardLayout({ children, availableRoutes }) {
+function DashboardLayout({ availableRoutes }) {
   return (
     <div className="dashboard-layout">
       <SideNav routes={availableRoutes.sidebarRoutes} />
       <div className="dashboard-main">
         <TopHeader />
-        <div className="dashboard-content">{children}</div>
+        <div className="dashboard-content">
+          <Outlet />
+        </div>
       </div>
     </div>
   );
@@ -40,7 +43,7 @@ function DashboardLayout({ children, availableRoutes }) {
  * PUBLIC_INTERFACE
  * Protected route component enforcing authentication and roles
  */
-function ProtectedRoute({ children, allowedRoles }) {
+function ProtectedRoute({ allowedRoles, children }) {
   const { user } = useAuth();
 
   if (!user) {
@@ -111,54 +114,43 @@ function App() {
         <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
-          {/* Admin */}
-          <Route
-            path="/admin/*"
-            element={
-              <ProtectedRoute allowedRoles={['Admin']}>
-                <DashboardLayout availableRoutes={roleRoutes.Admin}>
-                  <Routes>
-                    <Route path="" element={<AdminDashboard />} />
-                    <Route path="users" element={<AdminDashboard section="users" />} />
-                    <Route path="jobs" element={<AdminDashboard section="jobs" />} />
-                    <Route path="analytics" element={<AnalyticsDashboard />} />
-                  </Routes>
-                </DashboardLayout>
-              </ProtectedRoute>
-            }
-          />
-          {/* Recruiter */}
-          <Route
-            path="/recruiter/*"
-            element={
-              <ProtectedRoute allowedRoles={['Recruiter']}>
-                <DashboardLayout availableRoutes={roleRoutes.Recruiter}>
-                  <Routes>
-                    <Route path="" element={<RecruiterDashboard />} />
-                    <Route path="jobs" element={<JobManagement />} />
-                    <Route path="applications" element={<ApplicationManagement />} />
-                    <Route path="interviews" element={<InterviewScheduling />} />
-                  </Routes>
-                </DashboardLayout>
-              </ProtectedRoute>
-            }
-          />
-          {/* Candidate */}
-          <Route
-            path="/candidate/*"
-            element={
-              <ProtectedRoute allowedRoles={['Candidate']}>
-                <DashboardLayout availableRoutes={roleRoutes.Candidate}>
-                  <Routes>
-                    <Route path="" element={<CandidateDashboard />} />
-                    <Route path="jobs" element={<JobListings />} />
-                    <Route path="applications" element={<ApplicationTracking />} />
-                    <Route path="resume" element={<ResumeUpload />} />
-                  </Routes>
-                </DashboardLayout>
-              </ProtectedRoute>
-            }
-          />
+
+          {/* Admin Dashboard Routes */}
+          <Route path="/admin" element={
+            <ProtectedRoute allowedRoles={['Admin']}>
+              <DashboardLayout availableRoutes={roleRoutes.Admin} />
+            </ProtectedRoute>
+          }>
+            <Route index element={<AdminDashboard />} />
+            <Route path="users" element={<AdminDashboard section="users" />} />
+            <Route path="jobs" element={<AdminDashboard section="jobs" />} />
+            <Route path="analytics" element={<AnalyticsDashboard />} />
+          </Route>
+
+          {/* Recruiter Dashboard Routes */}
+          <Route path="/recruiter" element={
+            <ProtectedRoute allowedRoles={['Recruiter']}>
+              <DashboardLayout availableRoutes={roleRoutes.Recruiter} />
+            </ProtectedRoute>
+          }>
+            <Route index element={<RecruiterDashboard />} />
+            <Route path="jobs" element={<JobManagement />} />
+            <Route path="applications" element={<ApplicationManagement />} />
+            <Route path="interviews" element={<InterviewScheduling />} />
+          </Route>
+
+          {/* Candidate Dashboard Routes */}
+          <Route path="/candidate" element={
+            <ProtectedRoute allowedRoles={['Candidate']}>
+              <DashboardLayout availableRoutes={roleRoutes.Candidate} />
+            </ProtectedRoute>
+          }>
+            <Route index element={<CandidateDashboard />} />
+            <Route path="jobs" element={<JobListings />} />
+            <Route path="applications" element={<ApplicationTracking />} />
+            <Route path="resume" element={<ResumeUpload />} />
+          </Route>
+
           <Route
             path="/profile"
             element={
