@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../auth/AuthProvider';
 import './LoginPage.css';
 
@@ -56,9 +56,12 @@ function LoginPage() {
           </button>
         </form>
         {error && <div className="login-error">{error}</div>}
-        <div className="demo-note">
-          <b>Demo accounts:</b><br/>
-          admin/admin • recruiter/recruiter • candidate/candidate
+        <div className="demo-note" style={{ marginTop: 14, marginBottom: 6 }}>
+          Don't have an account? <Link to="/register">Sign up</Link>
+        </div>
+        <div className="demo-note" style={{ fontSize: '0.94rem', background: '#eeeeeea8', color: '#216392' }}>
+          <b>Demo accounts:</b><br />
+          admin/admin &nbsp;•&nbsp; recruiter/recruiter &nbsp;•&nbsp; candidate/candidate
         </div>
       </div>
     </div>

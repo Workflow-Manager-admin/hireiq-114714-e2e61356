@@ -10,6 +10,7 @@ import CandidateDashboard from './pages/candidate/CandidateDashboard';
 import LoginPage from './pages/LoginPage';
 import ProfilePage from './pages/ProfilePage';
 import NotFoundPage from './pages/NotFoundPage';
+import RegisterPage from './pages/RegisterPage';
 
 import './App.css';
 
@@ -99,6 +100,7 @@ function App() {
         </button>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
           {/* Admin */}
           <Route
             path="/admin/*"
