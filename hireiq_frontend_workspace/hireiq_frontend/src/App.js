@@ -88,6 +88,8 @@ function App() {
   return (
     <AuthProvider>
       <Router>
+        {/* Global background image overlay, always present */}
+        <div className="app-bg" aria-hidden="true" />
         <button 
           className="theme-toggle"
           onClick={() => setTheme(t => t === 'light' ? 'dark' : 'light')}
