@@ -13,6 +13,34 @@ function JobManagement() {
 
   useEffect(() => {
     fetchJobs();
+    // Populate a few dummy jobs on first load ONLY if jobs are empty (demo use)
+    // Delay a bit to allow Supabase setup in CI environments.
+    setTimeout(async () => {
+      let { data, error } = await supabase.from('jobs').select('*').limit(1);
+      if (!error && data.length === 0) {
+        await supabase.from('jobs').insert([
+          {
+            title: 'Frontend React Developer',
+            description: 'Build modern UIs with React. Collaborate with designers and backend engineers.',
+            location: 'Remote',
+            salary: '95000',
+          },
+          {
+            title: 'AI/ML Engineer',
+            description: 'Research and implement ML algorithms for smart candidate screening.',
+            location: 'San Francisco, CA',
+            salary: '160000',
+          },
+          {
+            title: 'Technical Recruiter',
+            description: 'Find and engage top technical talent, manage the full recruitment life-cycle.',
+            location: 'New York, NY',
+            salary: '85000',
+          }
+        ]);
+        fetchJobs();
+      }
+    }, 800);
   }, []);
 
   async function fetchJobs() {

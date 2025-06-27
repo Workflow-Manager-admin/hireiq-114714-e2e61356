@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { supabase } from '../auth/supabaseClient';
 import './LoginPage.css';
+// No extra CSS imported; Register and LoginPage share styles for consistency.
 
 /**
  * PUBLIC_INTERFACE
@@ -53,19 +54,20 @@ function RegisterPage() {
 
   return (
     <div className="login-page">
-      <div className="login-card">
-        <h2>
-          Hire<span className="accent">IQ</span> Sign Up
+      <div className="login-card" style={{maxWidth:420}}>
+        <h2 style={{letterSpacing:'0.6px'}}>
+          <span className="accent" style={{fontWeight:900}}>Create your account</span>
         </h2>
-        <form onSubmit={handleSubmit} autoComplete="off">
+        <form onSubmit={handleSubmit} autoComplete="off" style={{marginTop:18, display:'flex', flexDirection:'column', gap:0}}>
           <input
             name="email"
             type="email"
-            placeholder="Email"
+            placeholder="Work email"
             value={form.email}
             onChange={handleChange}
             required
             autoFocus
+            style={{marginBottom:12}}
           />
           <input
             name="password"
@@ -75,20 +77,33 @@ function RegisterPage() {
             onChange={handleChange}
             minLength={6}
             required
+            style={{marginBottom:12}}
           />
-          <select name="role" value={form.role} onChange={handleChange} style={{ marginBottom: 18, padding: '10px 9px', borderRadius: 6 }}>
+          <select
+            name="role"
+            value={form.role}
+            onChange={handleChange}
+            style={{
+              marginBottom:18,
+              padding:'10px 9px',
+              borderRadius: 6,
+              background:'#f8f9fa',
+              border: '1px solid #eee',
+              fontWeight:500
+            }}
+          >
             <option value="Candidate">Candidate</option>
             <option value="Recruiter">Recruiter</option>
             <option value="Admin">Admin</option>
           </select>
-          <button type="submit" className="login-btn" disabled={pending}>
+          <button type="submit" className="login-btn" disabled={pending} style={{marginBottom:8}}>
             {pending ? "Registering..." : "Register"}
           </button>
         </form>
-        {success && <div className="demo-note" style={{ background: '#47bf6b12', color: '#166f47' }}>{success}</div>}
+        {success && <div className="demo-note" style={{ background: '#e3fcec', color: '#145b39', fontWeight:600, border:'1px solid #4ad47c44', marginBottom:8 }}>{success}</div>}
         {error && <div className="login-error">{error}</div>}
-        <div className="demo-note" style={{ marginTop: 16 }}>
-          Already have an account? <Link to="/login">Login</Link>
+        <div className="demo-note" style={{ marginTop: 13, fontSize:'1rem'}}>
+          Already have an account? <Link style={{color:'#0070f3',textDecoration:'underline',fontWeight:600}} to="/login">Login</Link>
         </div>
       </div>
     </div>
