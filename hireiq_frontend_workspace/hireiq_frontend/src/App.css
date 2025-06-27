@@ -1,16 +1,63 @@
 /* CSS Variables for Theme Management */
 :root {
-  /* Light theme colors */
-  --primary: #0070f3;
-  --secondary: #1a1a1a;
-  --accent: #f5a623;
-  --bg-primary: #ffffff;
-  --bg-secondary: #f8f9fa;
-  --text-primary: #282c34;
-  --text-secondary: #585a5c;
-  --border-color: #e9ecef;
-  --button-bg: #0070f3;
-  --button-text: #ffffff;
+  /* Modern, professional palette */
+  --primary: #284DD9;         /* Deep vibrant royal blue */
+  --secondary: #273246;       /* Slate blue-gray for navs, backgrounds */
+  --accent: #12b7a6;          /* Energetic teal/cyan accent */
+  --bg-primary: #f9fafc;
+  --bg-secondary: #e5eaf4;
+  --text-primary: #1B232A;
+  --text-secondary: #426078;
+  --border-color: #c9d2e6;
+  --button-bg: var(--primary);
+  --button-text: #fff;
+}
+
+[data-theme="dark"] {
+  /* Dark theme colors */
+  --bg-primary: #1b232a;
+  --bg-secondary: #232a38;
+  --text-primary: #fff;
+  --text-secondary: #9ee5cf;
+  --border-color: #30405b;
+  --button-bg: #1ba897;
+  --button-text: #fff;
+}
+
+/* GLOBAL BACKGROUND IMAGE STYLES */
+.app-bg {
+  min-height: 100vh;
+  min-width: 100vw;
+  width: 100%;
+  height: 100%;
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(118deg, rgba(23,36,58,0.44) 8%, rgba(51,79,115,0.65) 80%),
+    url('https://images.unsplash.com/photo-1464983953574-0892a716854b?auto=format&fit=crop&w=1500&q=90') center center/cover no-repeat fixed;
+  /* Royalty-free Unsplash image: professional office theme (alt. https://unsplash.com/photos/people-sitting-beside-table-W3SEyZODn8U) */
+  filter: brightness(0.97);
+  transition: filter 0.3s;
+}
+
+/* Add a subtle blur if user prefers reduced transparency (accessibility) */
+@media (prefers-reduced-transparency: reduce) {
+  .app-bg {
+    filter: blur(3px) brightness(0.9);
+  }
+}
+
+/* MAIN APP */
+.App {
+  text-align: center;
+  background: none !important;
+  color: var(--text-primary);
+  min-height: 100vh;
+  transition: background-color 0.3s ease, color 0.3s ease;
+  position: relative;
+  z-index: 1;
 }
 
 [data-theme="dark"] {
