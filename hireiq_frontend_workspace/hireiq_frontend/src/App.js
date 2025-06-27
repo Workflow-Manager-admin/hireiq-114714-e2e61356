@@ -5,8 +5,15 @@ import SideNav from './components/SideNav';
 import TopHeader from './components/TopHeader';
 
 import AdminDashboard from './pages/admin/AdminDashboard';
+import AnalyticsDashboard from './pages/admin/AnalyticsDashboard';
 import RecruiterDashboard from './pages/recruiter/RecruiterDashboard';
+import JobManagement from './pages/recruiter/JobManagement';
+import ApplicationManagement from './pages/recruiter/ApplicationManagement';
+import InterviewScheduling from './pages/recruiter/InterviewScheduling';
 import CandidateDashboard from './pages/candidate/CandidateDashboard';
+import JobListings from './pages/candidate/JobListings';
+import ApplicationTracking from './pages/candidate/ApplicationTracking';
+import ResumeUpload from './pages/candidate/ResumeUpload';
 import LoginPage from './pages/LoginPage';
 import ProfilePage from './pages/ProfilePage';
 import NotFoundPage from './pages/NotFoundPage';
@@ -65,14 +72,16 @@ function App() {
         { label: 'Dashboard', path: '/admin' },
         { label: 'User Management', path: '/admin/users' },
         { label: 'Job Posts', path: '/admin/jobs' },
+        { label: 'Analytics', path: '/admin/analytics' },
         { label: 'Profile', path: '/profile' },
       ],
     },
     Recruiter: {
       sidebarRoutes: [
         { label: 'Dashboard', path: '/recruiter' },
+        { label: 'Job Posts', path: '/recruiter/jobs' },
         { label: 'Applications', path: '/recruiter/applications' },
-        { label: 'Schedule Interviews', path: '/recruiter/interviews' },
+        { label: 'Interviews', path: '/recruiter/interviews' },
         { label: 'Profile', path: '/profile' },
       ],
     },
@@ -81,6 +90,7 @@ function App() {
         { label: 'Dashboard', path: '/candidate' },
         { label: 'Job Listings', path: '/candidate/jobs' },
         { label: 'My Applications', path: '/candidate/applications' },
+        { label: 'Upload Resume', path: '/candidate/resume' },
         { label: 'Profile', path: '/profile' },
       ],
     },
@@ -111,6 +121,7 @@ function App() {
                     <Route path="" element={<AdminDashboard />} />
                     <Route path="users" element={<AdminDashboard section="users" />} />
                     <Route path="jobs" element={<AdminDashboard section="jobs" />} />
+                    <Route path="analytics" element={<AnalyticsDashboard />} />
                   </Routes>
                 </DashboardLayout>
               </ProtectedRoute>
@@ -124,8 +135,9 @@ function App() {
                 <DashboardLayout availableRoutes={roleRoutes.Recruiter}>
                   <Routes>
                     <Route path="" element={<RecruiterDashboard />} />
-                    <Route path="applications" element={<RecruiterDashboard section="applications" />} />
-                    <Route path="interviews" element={<RecruiterDashboard section="interviews" />} />
+                    <Route path="jobs" element={<JobManagement />} />
+                    <Route path="applications" element={<ApplicationManagement />} />
+                    <Route path="interviews" element={<InterviewScheduling />} />
                   </Routes>
                 </DashboardLayout>
               </ProtectedRoute>
@@ -139,8 +151,9 @@ function App() {
                 <DashboardLayout availableRoutes={roleRoutes.Candidate}>
                   <Routes>
                     <Route path="" element={<CandidateDashboard />} />
-                    <Route path="jobs" element={<CandidateDashboard section="jobs" />} />
-                    <Route path="applications" element={<CandidateDashboard section="applications" />} />
+                    <Route path="jobs" element={<JobListings />} />
+                    <Route path="applications" element={<ApplicationTracking />} />
+                    <Route path="resume" element={<ResumeUpload />} />
                   </Routes>
                 </DashboardLayout>
               </ProtectedRoute>
