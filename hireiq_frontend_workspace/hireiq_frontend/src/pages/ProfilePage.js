@@ -3,7 +3,7 @@ import { useAuth } from '../auth/AuthProvider';
 
 /**
  * PUBLIC_INTERFACE
- * Profile page for all roles.
+ * Profile page for all roles (Supabase/email and demo supported).
  */
 function ProfilePage() {
   const { user } = useAuth();
@@ -12,9 +12,9 @@ function ProfilePage() {
     <div>
       <h2>Profile</h2>
       <div>
-        <p><b>Username:</b> {user?.username}</p>
+        {user?.email && <p><b>Email:</b> {user.email}</p>}
+        {user?.username && <p><b>Username:</b> {user.username}</p>}
         <p><b>Role:</b> {user?.role}</p>
-        <p>Email and additional settings would appear here.</p>
       </div>
     </div>
   );

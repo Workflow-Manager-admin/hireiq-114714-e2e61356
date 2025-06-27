@@ -5,27 +5,50 @@ import './LoginPage.css';
 
 /**
  * PUBLIC_INTERFACE
- * Login page for role-based demo authentication.
+ * Login page for role-based authentication with Supabase support.
  */
 function LoginPage() {
-  const [form, setForm] = useState({ username: '', password: '' });
+  const [form, setForm] = useState({
+    email: '',
+    password: '',
+    // fallback for demo mode
+    username: '',
+    loginMode: 'standard', // 'standard' (Supabase) | 'demo'
+  });
   const [error, setError] = useState('');
+  const [pending, setPending] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  const handleChange = e => {
+  const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = e => {
+  const switchLoginMode = () => {
+    setForm({ ...form, loginMode: form.loginMode === 'demo' ? 'standard' : 'demo', email: '', username: '', password: '' });
+    setError('');
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const res = login(form.username, form.password);
-    if (res.success) {
-      if (res.role === 'Admin') navigate('/admin');
-      else if (res.role === 'Recruiter') navigate('/recruiter');
-      else if (res.role === 'Candidate') navigate('/candidate');
+    setError('');
+    setPending(true);
+
+    let result;
+    if (form.loginMode === 'demo') {
+      result = await login({ username: form.username, password: form.password, demo: true });
     } else {
-      setError('Invalid username or password');
+      result = await login({ email: form.email, password: form.password });
+    }
+    setPending(false);
+
+    if (result.success) {
+      if (result.role === 'Admin') navigate('/admin');
+      else if (result.role === 'Recruiter') navigate('/recruiter');
+      else if (result.role === 'Candidate') navigate('/candidate');
+      else navigate('/profile'); // fallback
+    } else {
+      setError(result.error || 'Invalid credentials, please try again.');
     }
   };
 
@@ -33,36 +56,69 @@ function LoginPage() {
     <div className="login-page">
       <div className="login-card">
         <h2>Hire<span className="accent">IQ</span> Login</h2>
-        <form onSubmit={handleSubmit}>
-          <input
-            name="username"
-            type="text"
-            placeholder="Username"
-            value={form.username}
-            onChange={handleChange}
-            required
-            autoFocus
-          />
-          <input
-            name="password"
-            type="password"
-            placeholder="Password"
-            value={form.password}
-            onChange={handleChange}
-            required
-          />
-          <button type="submit" className="login-btn">
-            Login
+        <form onSubmit={handleSubmit} autoComplete="off">
+          {form.loginMode === 'demo' ? (
+            <>
+              <input
+                name="username"
+                type="text"
+                placeholder="Demo Username"
+                value={form.username}
+                onChange={handleChange}
+                required
+                autoFocus
+              />
+              <input
+                name="password"
+                type="password"
+                placeholder="Password"
+                value={form.password}
+                onChange={handleChange}
+                required
+              />
+            </>
+          ) : (
+            <>
+              <input
+                name="email"
+                type="email"
+                placeholder="Email"
+                value={form.email}
+                onChange={handleChange}
+                required
+                autoFocus
+              />
+              <input
+                name="password"
+                type="password"
+                placeholder="Password"
+                value={form.password}
+                onChange={handleChange}
+                required
+              />
+            </>
+          )}
+          <button type="submit" className="login-btn" disabled={pending}>
+            {pending ? "Logging in..." : "Login"}
           </button>
         </form>
         {error && <div className="login-error">{error}</div>}
         <div className="demo-note" style={{ marginTop: 14, marginBottom: 6 }}>
-          Don't have an account? <Link to="/register">Sign up</Link>
+          {form.loginMode === "demo"
+            ? <>Log in with <b>demo</b> accounts. <button type="button" style={{background:'none',border:0,color:'#0070f3',cursor:'pointer',textDecoration:'underline',fontSize:'0.99rem'}} onClick={switchLoginMode}>Use email login</button></>
+            : <>Don't have an account? <Link to="/register">Sign up</Link> <br />
+                <span style={{fontSize:'0.97rem',display:'block',marginTop:4}}>
+                  Or <button type="button" style={{background:'none',border:0,color:'#0070f3',cursor:'pointer',textDecoration:'underline',fontSize:'0.99rem'}} onClick={switchLoginMode}>Use demo account</button>
+                </span>
+              </>
+          }
         </div>
-        <div className="demo-note" style={{ fontSize: '0.94rem', background: '#eeeeeea8', color: '#216392' }}>
-          <b>Demo accounts:</b><br />
-          admin/admin &nbsp;•&nbsp; recruiter/recruiter &nbsp;•&nbsp; candidate/candidate
-        </div>
+        {form.loginMode === 'demo' && (
+          <div className="demo-note" style={{ fontSize: '0.94rem', background: '#eeeeeea8', color: '#216392' }}>
+            <b>Demo accounts:</b><br />
+            admin/admin &nbsp;•&nbsp; recruiter/recruiter &nbsp;•&nbsp; candidate/candidate
+          </div>
+        )}
       </div>
     </div>
   );

@@ -16,7 +16,7 @@ function TopHeader() {
       </div>
       <div className="topheader-right">
         <div className="user-info">
-          <span>{user?.username}</span>
+          <span>{user?.email || user?.username}</span>
           <span className="user-role">{user?.role}</span>
         </div>
         <button className="logout-btn" onClick={logout}>
