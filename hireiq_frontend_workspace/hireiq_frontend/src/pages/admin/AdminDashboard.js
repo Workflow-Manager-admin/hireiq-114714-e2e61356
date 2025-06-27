@@ -1,49 +1,101 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../../auth/supabaseClient';
 
-// Modal for editing user roles (moved outside main function to obey Hooks rules)
-function UserEditModal({ user, onClose, onChangeRole }) {
-  const [editVals, setEditVals] = useState({ role: user.role });
+// Reusable feedback toast component
+function Toast({ message, type = "success", onClose }) {
+  if (!message) return null;
+  return (
+    <div
+      style={{
+        position: "fixed",
+        top: 30,
+        right: 36,
+        zIndex: 1011,
+        background: type === "error" ? "#ffe4df" : "#e3fcec",
+        color: type === "error" ? "#db2222" : "#145b39",
+        borderRadius: 7,
+        padding: "12px 19px",
+        minWidth: 160,
+        fontWeight: 600,
+        boxShadow: "0 4px 18px #20163323"
+      }}
+    >
+      {message}
+      <button
+        style={{
+          background: "none",
+          border: 0,
+          color: "#888",
+          fontWeight: 700,
+          marginLeft: 12,
+          fontSize: 14,
+          cursor: "pointer"
+        }}
+        aria-label="Dismiss status"
+        onClick={onClose}
+      >x</button>
+    </div>
+  );
+}
+
+// Modal for editing user roles/status
+function UserEditModal({ user, onClose, onChangeRole, onChangeStatus }) {
+  const [editVals, setEditVals] = useState({ role: user.role, active: user.active !== false });
   const [pending, setPending] = useState(false);
 
   const changeRole = (e) => setEditVals(v => ({ ...v, role: e.target.value }));
+  const changeStatus = (e) => setEditVals(v => ({ ...v, active: e.target.value === "true" }));
 
   async function submit(e) {
     e.preventDefault();
     setPending(true);
-    await onChangeRole(user, editVals.role);
-    setPending(false);
-    onClose();
+    try {
+      await onChangeRole(user, editVals.role, editVals.active);
+    } finally {
+      setPending(false);
+      onClose();
+    }
   }
 
   if (!user) return null;
   return (
     <div style={{
-      position: 'fixed', inset: 0, background: 'rgba(30,30,50,0.18)', zIndex: 1010, display: 'flex',
+      position: 'fixed', inset: 0, background: 'rgba(30,30,50,0.21)', zIndex: 1010, display: 'flex',
       alignItems: 'center', justifyContent: 'center'
     }}>
-      <div style={{ background: '#fff', borderRadius: 10, minWidth: 260, maxWidth: 340, padding: '29px 25px 21px' }}>
-        <h3 style={{ margin: '0 0 16px 0', color: '#145b39', fontSize: '1.12rem', fontWeight: 700 }}>Edit User</h3>
+      <div style={{ background: '#fff', borderRadius: 12, minWidth: 280, maxWidth: 340, boxShadow: '0 5px 40px #20163336', padding: '32px 27px 25px' }}>
+        <h3 style={{ margin: '0 0 14px 0', color: '#145b39', fontSize: '1.13rem', fontWeight: 700 }}>Edit User</h3>
         <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           <div><b>{user.full_name || user.email || user.id}</b></div>
           <label>
-            Role:<br />
+            <span style={{ fontWeight: 500 }}>Role:</span><br />
             <select value={editVals.role} onChange={changeRole} disabled={pending} style={{ marginTop: 3, padding: 7, borderRadius: 6 }}>
               <option value="Candidate">Candidate</option>
               <option value="Recruiter">Recruiter</option>
               <option value="Admin">Admin</option>
             </select>
           </label>
-          <div style={{ display: 'flex', gap: 12, marginTop: 11 }}>
+          <label>
+            <span style={{ fontWeight: 500 }}>Status:</span><br />
+            <select value={editVals.active ? "true" : "false"} onChange={changeStatus} disabled={pending} style={{ marginTop: 3, padding: 7, borderRadius: 6 }}>
+              <option value="true">Active</option>
+              <option value="false">Inactive</option>
+            </select>
+          </label>
+          <div style={{ display: 'flex', gap: 12, marginTop: 12 }}>
             <button
               type="submit"
               disabled={pending}
-              style={{ background: '#0070f3', color: 'white', border: 0, borderRadius: 6, fontWeight: 700, padding: '7px 20px' }}
+              style={{
+                background: '#0070f3', color: 'white', border: 0, borderRadius: 6,
+                fontWeight: 700, padding: '7px 20px', minWidth: 82
+              }}
             >Save</button>
             <button
               type="button"
               onClick={onClose}
               style={{ background: '#eaeaea', color: '#3d314c', border: 0, borderRadius: 6, fontWeight: 500, padding: '7px 18px' }}
+              disabled={pending}
             >Cancel</button>
           </div>
         </form>
@@ -57,19 +109,22 @@ function UserEditModal({ user, onClose, onChangeRole }) {
  * Full Admin Dashboard with user/role management, job moderation, and system oversight.
  */
 function AdminDashboard({ section }) {
-  // State for users, jobs, and status notifications
+  // State for users, jobs, status/feedback (toast), etc
   const [users, setUsers] = useState([]);
   const [jobs, setJobs] = useState([]);
   const [fetching, setFetching] = useState(false);
   const [userAction, setUserAction] = useState({ pending: false, error: '', success: '' });
   const [jobAction, setJobAction] = useState({ pending: false, error: '', success: '' });
 
+  // Success/error toast states
+  const [toast, setToast] = useState({ message: '', type: 'success' });
+
   // For user editing modal/dialog
   const [editUser, setEditUser] = useState(null);
 
   // Tabs: section=null: summary, users: "users", jobs: "jobs"
   useEffect(() => {
-    if (!section || section === "") return; // section picked by dashboard nav/routes
+    if (!section || section === "") return;
     if (section === "users") fetchUsers();
     if (section === "jobs") fetchJobs();
     // eslint-disable-next-line
@@ -78,7 +133,6 @@ function AdminDashboard({ section }) {
   async function fetchUsers() {
     setFetching(true);
     setUserAction({ pending: false, error: '', success: '' });
-    // Get users from 'profiles' table
     const { data, error } = await supabase.from('profiles').select('*').order('created_at', { ascending: false });
     if (!error && data) setUsers(data);
     else setUserAction(s => ({ ...s, error: 'Failed to fetch users.' }));
@@ -95,45 +149,45 @@ function AdminDashboard({ section }) {
   }
 
   // PUBLIC_INTERFACE
-  // Update user role or active status
-  async function handleUserUpdate(user, updates) {
+  // Update user role and/or status from modal
+  async function handleUserRoleChange(user, newRole, newActive) {
     setUserAction({ pending: true, error: '', success: '' });
+    const updates = { role: newRole };
+    if (newActive !== undefined) updates.active = newActive;
     const { error } = await supabase.from('profiles').update(updates).eq('id', user.id);
     if (!error) {
       setUserAction({ pending: false, error: '', success: 'User updated!' });
+      setToast({ message: 'User updated!', type: 'success' });
       setEditUser(null);
       fetchUsers();
     }
-    else setUserAction({ pending: false, error: error.message || 'Update failed.', success: '' });
+    else {
+      setUserAction({ pending: false, error: error.message || 'Update failed.', success: '' });
+      setToast({ message: error.message || 'User update failed.', type: 'error' });
+    }
   }
 
-  // PUBLIC_INTERFACE
-  // Soft "deactivate" user (set 'active' field to false if present)
+  // Update ONLY status field for deactivate/reactivate from quick action
   async function handleUserDeactivate(user) {
-    await handleUserUpdate(user, { active: false });
+    await handleUserRoleChange(user, user.role, false);
   }
-
-  // PUBLIC_INTERFACE
-  // Reactivate user (set 'active' field to true)
   async function handleUserReactivate(user) {
-    await handleUserUpdate(user, { active: true });
+    await handleUserRoleChange(user, user.role, true);
   }
 
-  // PUBLIC_INTERFACE
-  // Promote/demote user's role
-  async function handleUserRoleChange(user, newRole) {
-    await handleUserUpdate(user, { role: newRole });
-  }
-
-  // Job moderation: allow admin to delete, or "deactivate" jobs
+  // Job moderation
   async function handleJobDelete(jobId) {
     if (!window.confirm('Are you sure you want to permanently delete this job posting?')) return;
     setJobAction({ pending: true, error: '', success: '' });
     const { error } = await supabase.from('jobs').delete().eq('id', jobId);
     if (!error) {
       setJobAction({ pending: false, error: '', success: 'Job deleted.' });
+      setToast({ message: 'Job deleted.', type: 'success' });
       fetchJobs();
-    } else setJobAction({ pending: false, error: error.message || 'Delete failed', success: '' });
+    } else {
+      setJobAction({ pending: false, error: error.message || 'Delete failed', success: '' });
+      setToast({ message: error.message || 'Job delete failed.', type: 'error' });
+    }
   }
 
   async function handleJobDeactivate(job) {
@@ -141,20 +195,31 @@ function AdminDashboard({ section }) {
     const { error } = await supabase.from('jobs').update({ active: false }).eq('id', job.id);
     if (!error) {
       setJobAction({ pending: false, error: '', success: 'Job deactivated.' });
+      setToast({ message: 'Job deactivated.', type: 'success' });
       fetchJobs();
-    } else setJobAction({ pending: false, error: error.message || 'Update failed', success: '' });
+    } else {
+      setJobAction({ pending: false, error: error.message || 'Update failed', success: '' });
+      setToast({ message: error.message || 'Job deactivate failed.', type: 'error' });
+    }
   }
   async function handleJobReactivate(job) {
     setJobAction({ pending: true, error: '', success: '' });
     const { error } = await supabase.from('jobs').update({ active: true }).eq('id', job.id);
     if (!error) {
       setJobAction({ pending: false, error: '', success: 'Job reactivated.' });
+      setToast({ message: 'Job reactivated.', type: 'success' });
       fetchJobs();
-    } else setJobAction({ pending: false, error: error.message || 'Update failed', success: '' });
+    } else {
+      setJobAction({ pending: false, error: error.message || 'Update failed', success: '' });
+      setToast({ message: error.message || 'Job reactivate failed.', type: 'error' });
+    }
   }
 
   return (
     <div style={{ maxWidth: 1000, margin: '26px auto 0', padding: '0 10px' }}>
+      {/* Feedback Toast */}
+      <Toast message={toast.message} type={toast.type} onClose={() => setToast({ message: '', type: 'success' })} />
+
       {/* Welcome or section entry screen */}
       {(!section || section === "") && (
         <div style={{
@@ -230,6 +295,7 @@ function AdminDashboard({ section }) {
               user={editUser}
               onClose={() => setEditUser(null)}
               onChangeRole={handleUserRoleChange}
+              onChangeStatus={(user, status) => handleUserRoleChange(user, user.role, status)}
             />
           )}
           <button
